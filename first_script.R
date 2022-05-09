@@ -1,14 +1,11 @@
-a = 2 
-b = 3 
-c = 1 
-d = 5 
-
 install.packages("readxl")
 install.packages("dplyr")
+install.packages("psych")
 
 library(readxl)
 library(dplyr)
 library(cluster)
+library(psych)
 
 
 # Datensatz laden
@@ -76,7 +73,7 @@ table(is.na(Cluster_vars$Q163)) #18
 
 # Clusteranalyse 1: Gower-Koeffizient ohne Entfernen der Missing Values
 
-g <- daisy(Cluster_vars, metric='gower')
+g <- daisy(Cluster_vars[,2:7], metric='gower')
 g
 
 # Clusteranalyse 1.1 Single Linkage
@@ -132,3 +129,52 @@ Cluster_vars <- Cluster_vars[Cluster_vars$na_count == 0, ]
 # Distanzmatrix
 
 # Clusteranalyse 2.1
+g2 <- daisy(Cluster_vars[,2:7], metric='euclidean')
+
+# Clusteranalyse 2.1 Single Linkage ohne Missings
+CA5 <- hclust(g2, method = "single", members = NULL)
+CA5$merge
+CA5$height
+CA5$order
+par(las=1)
+plot(CA5, main='', xlab='', ylab='', sub='')
+# --> sehr uneindeutiges Ergebnis, deutliche Kettenbildung
+
+# Clusteranalyse 2.2 Complete Linkage ohne Missings
+CA6 <- hclust(g2, method = "complete", members = NULL)
+CA6$merge
+CA6$height
+CA6$order
+par(las=1)
+plot(CA6, main='', xlab='', ylab='', sub='')
+# --> uneindeutig, sehr viele kleine Cluster
+
+# Clusteranalyse 2.3 Average Linkage ohne Missings
+CA7 <- hclust(g2, method = "average", members = NULL)
+CA7$merge
+CA7$height
+CA7$order
+par(las=1)
+plot(CA7, main='', xlab='', ylab='', sub='')
+# --> sehr ähnlich wie bei Complete Linkage, uneindeutig
+
+# Clusteranalyse 2.4 Ward Methode ohne Missings
+CA8 <- hclust(g2, method = "ward.D", members = NULL)
+CA8$merge
+CA8$height
+CA8$order
+par(las=1)
+plot(CA8, main='', xlab='', ylab='', sub='')
+# --> sehr deutliche Lösung, Größe der Cluster hat sich durch Entfernen der Missings angenähert
+
+# Zwei-Cluster-Lösung festlegen
+Cluster_vars$cluster1 <- cutree(CA8, k=2)
+table(Cluster_vars$cluster1)
+rect.hclust(CA8, k=2, border="red")
+
+# Eigenschaften der Cluster beschreiben
+describeBy(Cluster_vars[,2:7], group=Cluster_vars$cluster1)
+# Cluster 1 ist ablehnender gegenüber Wissenschaft und Technologie eingestellt,
+# manche Variablen unterscheiden sich aber kaum,
+# Unterschiede vor allem bei Q160 bis Q162
+# Ergebnisse insgesamt nicht extrem eindeutig
