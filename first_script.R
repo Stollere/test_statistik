@@ -1,4 +1,3 @@
-#Test Anita
 install.packages("readxl")
 install.packages("dplyr")
 install.packages("psych")
